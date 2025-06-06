@@ -69,6 +69,15 @@ class I2CDevice:
         """
         return self.write_read(bytes([reg]), read_len)
 
+    def read_mem_addr8(self, addr, read_len=1):
+        """
+        Read from a memory device with an 8 bit address. Functionally the same as read_reg() but included for consonance with the function name
+        for a 16 bit address
+        :param addr:
+        :return:
+        """
+        return self.write_read(bytes([addr]), read_len)
+
     def read_reg_repeated(self, n_repeats, reg, read_len=1, convert_fn=None):
         """
         Just like read_reg, but opens the serial, performs n_repeats, then closes the serial

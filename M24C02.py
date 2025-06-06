@@ -1,0 +1,1 @@
+ADDR_7BIT = 0x50  # E0-E2 grounded
