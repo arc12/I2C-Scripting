@@ -11,7 +11,7 @@ class I2CDevice:
 
     def write(self, payload):
         """
-        Sends START + ADDR_W + LENGTH + PAYLOAD + STOP
+        Sends START + ADDR_W + LENGTH + PAYLOAD + STOP  (NB this is the message to the interface, not the final I2C message, which is just the Addr + payload)
         :param payload: bytes to send
         :return:
         """
@@ -28,6 +28,14 @@ class I2CDevice:
         :return:
         """
         self.write(bytes([reg, value]))
+
+    def write_cmd(self, cmd):
+        """
+        Just send single byte over I2C = slave device command
+        :param cmd: typically set as hex literal
+        :return:
+        """
+        self.write(bytes([cmd]))
 
     def write_read(self, write_payload, read_bytes):
         was_open = self.adapter.serial.is_open
