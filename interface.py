@@ -29,6 +29,21 @@ class I2CDevice:
         """
         self.write(bytes([reg, value]))
 
+    def write_reg16(self, reg16, value, bigendian=True):
+        """
+
+        :param reg16: typically set as hex literal. 16 bit value
+        :param value: value of register, integer 0-255
+        :param bigendian: if True, the MSB of the command is sent first
+        :return:
+        """
+        msb = reg16 >> 8
+        lsb = reg16 & 0xff
+        if bigendian:
+            self.write(bytes([msb, lsb, value]))
+        else:
+            self.write(bytes([lsb, msb, value]))
+
     def write_cmd(self, cmd):
         """
         Just send single byte over I2C = slave device command
@@ -36,6 +51,20 @@ class I2CDevice:
         :return:
         """
         self.write(bytes([cmd]))
+
+    def write_cmd16(self, cmd16, bigendian=True):
+        """
+        Just send double byte over I2C = slave device command
+        :param cmd16: typically set as hex literal
+        :param bigendian: if True, the MSB of the command is sent first
+        :return:
+        """
+        msb = cmd16 >> 8
+        lsb = cmd16 & 0xff
+        if bigendian:
+            self.write(bytes([msb, lsb]))
+        else:
+            self.write(bytes([lsb, msb]))
 
     def write_read(self, write_payload, read_bytes):
         was_open = self.adapter.serial.is_open
@@ -76,6 +105,21 @@ class I2CDevice:
         :return:
         """
         return self.write_read(bytes([reg]), read_len)
+
+    def read_reg16(self, reg16, read_len=1, bigendian=True):
+        """
+
+        :param reg16: 16 bit register, typically given as a hex literal
+        :param read_len: optional number of bytes. slave device is assumed to auto-inc register
+        :param bigendian: if True, the MSB of the command is sent first
+        :return:
+        """
+        msb = reg16 >> 8
+        lsb = reg16 & 0xff
+        if bigendian:
+            return self.write_read(bytes([msb, lsb]), read_len)
+        else:
+            return self.write_read(bytes([lsb, msb]), read_len)
 
     def read_mem_addr8(self, addr, read_len=1):
         """
