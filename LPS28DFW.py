@@ -11,12 +11,17 @@ CTRL_REG2 = 0x11
 # CTRL_REG3 = 0x12
 # CTRL_REG4 = 0x13
 REG_STATUS = 0x27
+FIFO_CTRL_REG = 0x14
+FIFO_WTM_REG = 0x15
 # measurement results
 REG_PRESSURE_XL = 0x28
 REG_PRESSURE_L = 0x29
 REG_PRESSURE_H = 0x2A
 REG_TEMP_L = 0x2B
 REG_TEMP_H = 0x2C
+FIFO_DATA_OUT_PRESS_XL = 0x78
+FIFO_DATA_OUT_PRESS_L = 0x79
+FIFO_DATA_OUT_PRESS_H = 0x7A
 
 # Bit patterns for register setting components
 ODR_ONESHOT = 0b0000  # default
@@ -51,6 +56,9 @@ def make_ctrl1(odr=0, avg=0):  # always specify odr since the hardware default i
 
 def make_ctrl2(boot=0, fs_mode=0, lp_filter_mode=0, lp_filter_en=0, bdu_mode=0, sw_reset=0, one_shot_trigger=0):
     return (boot << 7) + (fs_mode << 6) + (lp_filter_mode << 5) + (lp_filter_en << 4) + (bdu_mode << 3) + (sw_reset << 2) + one_shot_trigger
+
+def make_fifo_ctrl(stop_on_wtm=0, trig_modes=0, fifo_mode=0):
+    return (stop_on_wtm << 3) + (trig_modes << 2) + fifo_mode
 
 def compute_pressure_hpa(press_xl, press_l, press_h, fs_mode):
     return ((press_h << 16) + (press_l << 8) + press_xl) / fs_divisor(fs_mode)

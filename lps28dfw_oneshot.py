@@ -14,6 +14,7 @@ print(f"WHO_AM_I should report 0xb4. Received: {format_hex(whoami)}")
 # Do a one-shot then poll for completion. This is leaving the default averaging setting, which is 4x over-sampling, and 1260hPa range
 dev.write_reg(CTRL_REG1, make_ctrl1())  # re-assert defaults in case of re-run
 print("----- x4 -----")
+p_sum = 0
 for rep in range(10):
     dev.write_reg(CTRL_REG2, make_ctrl2(one_shot_trigger=1))
     # I infer from the datasheet that the above settings should have about 2ms delay before data is available
@@ -26,10 +27,14 @@ for rep in range(10):
     p_registers = dev.read_reg(REG_PRESSURE_XL, 3)  # auto-increments
     t_registers = dev.read_reg(REG_TEMP_L, 2)
 
-    print(f"Pressure={compute_pressure_hpa_reg(p_registers, fs_mode=0):.2f}hPa \tTemp={compute_temp_c_reg(t_registers)}C")
+    p = compute_pressure_hpa_reg(p_registers, fs_mode=0)
+    p_sum += p
+    print(f"Pressure={p:.2f}hPa \tTemp={compute_temp_c_reg(t_registers)}C")
+print(f"Mean Pressure = {p_sum/10:.2f}")
 
 dev.write_reg(CTRL_REG1, make_ctrl1(avg=AVG_16))
 print("----- x16 -----")
+p_sum = 0
 for rep in range(10):
     dev.write_reg(CTRL_REG2, make_ctrl2(one_shot_trigger=1))
     # I infer from the datasheet that the above settings should have about 2ms delay before data is available
@@ -42,4 +47,7 @@ for rep in range(10):
     p_registers = dev.read_reg(REG_PRESSURE_XL, 3)  # auto-increments
     t_registers = dev.read_reg(REG_TEMP_L, 2)
 
-    print(f"Pressure={compute_pressure_hpa_reg(p_registers, fs_mode=0):.2f}hPa \tTemp={compute_temp_c_reg(t_registers)}C")
+    p = compute_pressure_hpa_reg(p_registers, fs_mode=0)
+    p_sum += p
+    print(f"Pressure={p:.2f}hPa \tTemp={compute_temp_c_reg(t_registers)}C")
+print(f"Mean Pressure = {p_sum / 10:.2f}")
