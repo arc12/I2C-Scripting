@@ -1,9 +1,11 @@
-from interface import Adapter, I2CDevice, format_bin, format_hex, bytes_to_int16
+from interface import Adapter, I2CDevice, format_bin, format_hex, bytes_to_int16, I2C_SPEED_7_4, I2C_SPEED_99, I2C_SPEED_375
 from SFM3003 import *
-from time import sleep, time
+from time import sleep, time, localtime, strftime
 
 adapter = Adapter()
 adapter.check()
+
+adapter.set_i2c_speed(I2C_SPEED_99)
 
 dev = I2CDevice(ADDR_7BIT_CE, adapter)
 
@@ -18,33 +20,35 @@ print("Serial No: ", ser)  # digits are yywwnnnnnn, where yy = year, ww = week i
 # Datasheet says 12ms delay before 1st reading available + another 18ms until readings stabilised after start continuous measurements
 # The internal sampling interval is ~0.5ms.
 # OBSERVATION: there is about a 0.2C rise between the first available reading and the stabilised temp, which occurs about 20ms later
-t0 = time()
-t = t0
-dev.write_cmd16(CMD_START_CONTINUOUS_AIR)
-# sleep(0.005)
-while t - t0 < 0.1:
-    t = time()
-    raw = dev.read(6)
-    print(f"{(t - t0) * 1000}ms, Temp = {compute_temp(raw[3:]):.2f}C")
-
-dev.write_cmd16(CMD_STOP)
-
-exit(0)
+# t0 = time()
+# t = t0
+# dev.write_cmd16(CMD_START_CONTINUOUS_AIR)
+# # sleep(0.005)
+# while t - t0 < 0.1:
+#     t = time()
+#     raw = dev.read(6)
+#     print(f"{(t - t0) * 1000}ms, Temp = {compute_temp(raw[3:]):.2f}C")
+#
+# dev.write_cmd16(CMD_STOP)
+#
+# exit(0)
 
 
 # Perform a series of wake + start, read values, stop, sleep, with wait periods in between.
 # The internal sampling interval is ~0.5ms
 while (True):
-    print(time())
+    print(f"\n>> {strftime('%H:%M:%S', localtime(time()))} <<")
     dev.write_cmd16(CMD_START_CONTINUOUS_AIR)
     sleep(0.03)  # 30ms warm up time before good measurements available
 
     # perform a dummy read to remove the warm-up average
     raw = dev.read(9)  # do I need 9 bytes?
+    print(format_hex(raw, 3))
 
     sleep(0.05)  # allow an averaging period of 100 samples. Exponential smoothing kicks in after 64ms.
 
     raw = dev.read(9)  # raw flow + temp
+    print(format_hex(raw, 3))
 
     print(f"Status word: 0b{format_bin(raw[6])} {format_bin(raw[7])}")
 
