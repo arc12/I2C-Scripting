@@ -1,5 +1,6 @@
 # Runs at a 1600Hz ODR and loops as fast as possible (~6ms) in Python reading values, with a threshold value which determines "capture".
 # Uses HP filter and runs in high performance mode (14 bit precision)
+# See also: lis2dw12_event_fifo.py
 
 from time import time
 from interface import Adapter, I2CDevice, bytes_to_int16

@@ -12,6 +12,14 @@ TAP_THS_X = 0x30
 TAP_THS_Y = 0x31
 TAP_THS_Z = 0x32
 TAP_SRC = 0x39
+FIFO_CTRL = 0x2E
+
+# FIFO modes
+FIFO_MODE_BYPASS = 0b000
+FIFO_MODE_FIFO = 0b001
+FIFO_MODE_CONTINUOUS = 0b110
+FIFO_MODE_CONTINUOUS2FIFO = 0b011
+FIFO_MODE_BYPASS2CONTINUOUS = 0b100
 
 # functions to compose register values from components
 # the components are always NOT bit-shifted when passed
@@ -41,6 +49,9 @@ def make_tap_ths_y(tap_prio=0, ths_y=0):
 def make_tap_ths_z(en_x=0, en_y=0, en_z=0, ths_z=0):
     return (en_x << 7) + (en_y << 6) + (en_z << 5) + ths_z
 
+def make_fifo_ctrl(fifo_mode=0, fifo_threshold=31):
+    return (fifo_mode << 5) + fifo_threshold
+
 def make_int_dur(latency=0, quiet=0, shock=0):  # tap durations
     """
 
@@ -50,6 +61,21 @@ def make_int_dur(latency=0, quiet=0, shock=0):  # tap durations
     :return:
     """
     return (latency << 4) + (quiet << 2) + shock
+
+def odr_to_hz(odr, in_lp_mode=False):
+    if odr == 0:
+        return 0
+    elif odr == 1:
+        return 1.6 if in_lp_mode else 12.5
+    elif 2 <= odr <= 6:
+        return 12.5 * 2 ** (odr - 2)
+    elif 7 <= odr <=9:
+        return 200 if in_lp_mode else 12.5 * 2 ** (odr - 2)
+
+def raw_to_mg(raw_val, is_12_bit=False):  # also rounds to 1dp
+    # LSB is 0.244g and raw value is right-aligned 14 bit value
+    mg_scale = 0.976 if is_12_bit else 0.244 / 4
+    return round(raw_val * mg_scale, 1)
 
 if __name__ == "__main__":
     print(bytes.hex(make_ctrl1(4, 1, 1)))

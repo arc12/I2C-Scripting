@@ -24,7 +24,7 @@ dev.write_reg(TAP_THS_X, make_tap_ths_x(ths_x=ths))
 dev.write_reg(TAP_THS_Y, make_tap_ths_y(ths_y=ths))
 dev.write_reg(TAP_THS_Z, make_tap_ths_z(en_x=True, en_y=True, en_z=True, ths_z=ths))  # enabling all axes.
 # max duration to qualify as a tap. default is 4/ODR
-dev.write_reg(INT_DUR, make_int_dur(shock=2))
+dev.write_reg(INT_DUR, make_int_dur(shock=0))
 # enable int to INT1
 dev.write_reg(CTRL4_INT1_PAD_CTRL, make_ctrl4(int1_single_tap=True))
 dev.write_reg(CTRL7, make_ctrl7(interrupts=True))
@@ -43,5 +43,7 @@ dev.write_reg(CTRL1, make_ctrl1(
 ))
 
 while True:
+    while not adapter.check_gpio_bit(4):
+        pass
     print("Tap Src: ", format_bin(dev.read_reg(TAP_SRC)[0]))  # reading the interrupt source register resets the interrupt latch (incl pin)
     sleep(1)
