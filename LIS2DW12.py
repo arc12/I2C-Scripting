@@ -1,4 +1,5 @@
-ADDR_7BIT = 0x19  # SA0 left floating (internal pull-up)
+# ADDR_7BIT = 0x19  # SA0 left floating (internal pull-up)
+ADDR_7BIT = 0x18  # SA0 to GND
 
 # Registers
 CTRL1 = 0x20

@@ -3,6 +3,12 @@
 import serial
 from settings import *
 
+# I2C Clock Rates are set via a pair of registers - see datasheet 9.2.5 - these are the lower register values matching kHz speeds
+I2C_SPEED_375 = 5  # fastest I2C speed supported
+I2C_SPEED_208 = 9
+I2C_SPEED_99 = 19  # this is the hardware default
+I2C_SPEED_7_4 = 255
+
 # >>>>> I2C Device Read/Write Operations  <<<<<<<<<<<<
 class I2CDevice:
     def __init__(self, i2c_addr, adapter):
@@ -66,7 +72,7 @@ class I2CDevice:
         else:
             self.write(bytes([lsb, msb]))
 
-    def write_read(self, write_payload, read_bytes):
+    def write_read(self, write_payload, read_bytes=1):
         was_open = self.adapter.serial.is_open
         if not was_open:
             self.adapter.serial.open()
@@ -147,8 +153,33 @@ class I2CDevice:
         self.adapter.serial.close()
         return r_list
 
+    def dump_reg(self, reg_list):
+        """
+        Reads a set of registers (8 bit) and prints the values in hex and binary
+        :param reg_list: a list of tuples, where the 1st of the tuples is the reg name and the second its address
+        :return: None
+        """
+        self.adapter.serial.open()
+
+        max_name_len = max([len(v[0]) for v in reg_list])  # used to ensure column alignment in output
+        output_width = max_name_len + 27
+        head_l = '=' * ((output_width - 15) // 2)
+        head_r = '=' * (output_width - 15 - len (head_l))
+        print(head_l, "Register Dump", head_r)
+        for reg_name, reg in reg_list:
+            reg_val = self.write_read(bytes([reg]))[0]
+            print(f"{reg_name} (0x{reg:02x}): {' ' * (max_name_len - len(reg_name))}0x{reg_val:02x} = 0b{format_bin(reg_val)}")
+        print('=' * output_width)
+        print()
+        self.adapter.serial.close()
+
+
 class Adapter:
-    def __init__(self):
+    def __init__(self, i2c_speed=None):
+        """
+
+        :param i2c_speed: see set_i2c_speed(). If None then the hardware default is used, which is documented as 0x13 ie 99kHz
+        """
         self.serial = serial.Serial(PORT, BAUD, timeout=READ_TIMEOUT)
         self.serial.close()
 
@@ -170,6 +201,8 @@ class Adapter:
             # If things are still failing then the SC18IM704 must have already had its baud rate changed, but to different value
             if not self.check(do_print=False):
                 raise Exception("Failed to match baud rate to SC18IM704 - power cycle it then try again")
+        if i2c_speed is not None:
+            self.set_i2c_speed(i2c_speed)
 
     # >>>>>>>> SC18IM704 Internal <<<<<<<<<<<
     def check(self, do_print=True):
@@ -187,18 +220,35 @@ class Adapter:
             print(f"Failed to communicate (baud = {self.serial.baudrate})")
             return False
 
+    def set_i2c_speed(self, i2c_speed):
+        """
+
+        :param i2c_speed: constant of form I2C_SPEED_*
+        :return:
+        """
+        m = b'W' + bytes([0x07, i2c_speed, 0x08, 0]) + b'P'
+        self.serial.open()
+        self.serial.write(m)
+        self.serial.close()
 
     # >>>>>>>> GPIO Operations <<<<<<<<<<
     def read_gpio(self):
-        self.serial.open()
+        already_open = self.serial.is_open
+        if not already_open:
+            self.serial.open()
         self.serial.write(b'IP')
         r = self.serial.read(1)
-        self.serial.close()
-        return r
+        if not already_open:
+            self.serial.close()
+        return r[0]
+
+    def check_gpio_bit(self, bit_index):
+        gpios = self.read_gpio()
+        return bool(gpios & (1<<bit_index))
 
 # >>>>>>> misc
 def format_hex(bytes_to_print, bytes_per_sep=1):
-    return f"0x{bytes.hex(bytes_to_print, sep=" ", bytes_per_sep=bytes_per_sep)}"
+    return f"0x{bytes.hex(bytes_to_print, sep=' ', bytes_per_sep=bytes_per_sep)}"
 
 def format_bin(byte_to_print):  # SINGLE byte arg
     # TODO make flexible split options
