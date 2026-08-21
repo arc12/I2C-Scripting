@@ -1,6 +1,6 @@
 # pin 2, SA0 controls the LSb of the device address
 ADDR_7BIT_0 = 0x5C
-ADDR_7BIT_1 = 0x5D
+ADDR_7BIT_1 = 0x5D  # this is the default without the address pin being held low
 
 # Limited declaration of registers for basic testing.
 # Among other things, interrupts (incl thresholds and reference) and FIFO features are not included here
