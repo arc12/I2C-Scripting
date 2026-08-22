@@ -201,8 +201,7 @@ class Adapter:
             # If things are still failing then the SC18IM704 must have already had its baud rate changed, but to different value
             if not self.check(do_print=False):
                 raise Exception("Failed to match baud rate to SC18IM704 - power cycle it then try again")
-        if i2c_speed is not None:
-            self.set_i2c_speed(i2c_speed)
+        self.set_i2c_speed(i2c_speed)
 
     # >>>>>>>> SC18IM704 Internal <<<<<<<<<<<
     def check(self, do_print=True):
@@ -222,13 +221,17 @@ class Adapter:
 
     def set_i2c_speed(self, i2c_speed):
         """
-
-        :param i2c_speed: constant of form I2C_SPEED_*
+        Sets I2C clock rate (if param is not None) and then reads back current value
+        :param i2c_speed: constant of form I2C_SPEED_* or None to skip setting and just read current value
         :return:
         """
-        m = b'W' + bytes([0x07, i2c_speed, 0x08, 0]) + b'P'
         self.serial.open()
-        self.serial.write(m)
+        if i2c_speed is not None:
+            self.serial.write(b'W' + bytes([0x07, i2c_speed, 0x08, 0]) + b'P')
+        self.serial.write(b'R' + bytes([0x07, 0x08]) + b'P')
+        r = self.serial.read(2)
+        clk_rate_khz = int(round(1875 / (r[0] + 256 * r[1]), 0))
+        print(f"I2C Clock Rate = {clk_rate_khz}kHz")
         self.serial.close()
 
     # >>>>>>>> GPIO Operations <<<<<<<<<<
