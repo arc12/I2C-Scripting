@@ -5,7 +5,7 @@ from time import sleep
 adapter = Adapter()
 adapter.check()
 
-dev = I2CDevice(ADDR_7BIT_0, adapter)
+dev = I2CDevice(ADDR_7BIT_1, adapter)
 
 whoami = dev.read_reg(REG_WHO_AM_I)
 print(f"WHO_AM_I should report 0xb4. Received: {format_hex(whoami)}")

@@ -13,6 +13,8 @@ CTRL_REG2 = 0x11
 REG_STATUS = 0x27
 FIFO_CTRL_REG = 0x14
 FIFO_WTM_REG = 0x15
+FIFO_STATUS1 = 0x25
+FIFO_STATUS2 = 0x26
 # measurement results
 REG_PRESSURE_XL = 0x28
 REG_PRESSURE_L = 0x29
@@ -33,6 +35,26 @@ ODR_50Hz = 0b0101
 ODR_75Hz = 0b0110
 ODR_100Hz = 0b0111
 ODR_200Hz = 0b1000
+
+odr_lut = {
+    ODR_ONESHOT: None,
+    ODR_1Hz: 1,
+    ODR_4Hz: 4,
+    ODR_10Hz: 10,
+    ODR_25Hz: 25,
+    ODR_50Hz: 50,
+    ODR_75Hz: 75,
+    ODR_100Hz: 100,
+    ODR_200Hz: 200
+}
+
+def odr_hz(odr_code):
+    """
+    Return the ODR in Hz for the passed (bit pattern) code
+    :param odr_code:
+    :return: freq or None for oneshot mode or invalid param
+    """
+    return odr_lut.get(odr_code, None)
 
 AVG_4 = 0b000  # default
 AVG_8 = 0b001

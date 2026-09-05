@@ -5,7 +5,7 @@ from time import sleep
 adapter = Adapter()
 adapter.check()
 
-dev = I2CDevice(ADDR_7BIT_0, adapter)
+dev = I2CDevice(ADDR_7BIT_1, adapter)
 
 # Let the device run continuously with the FIFO set to "dynamic-stream" mode, which should allow the master to read the latest N measurements at any time.
 # Settings are to match a possible still-well setting, where a series of several readings (not so many) over a few seconds would be acquired.
@@ -24,6 +24,9 @@ dev = I2CDevice(ADDR_7BIT_0, adapter)
 # Conclude: given 1hPa equiv 1cm water, avg=0 only giving sd of around 1mm depth, which seems perfectly fine.
 
 fs_mode = 0  # 0 = full scale mode 1260hPa
+
+whoami = dev.read_reg(REG_WHO_AM_I)
+print(f"WHO_AM_I should report 0xb4. Received: {format_hex(whoami)}")
 
 # First check the existing setup. If we're at power-on then there will be some setup to do. Otherwise skip it (thinking of MCU work reduction)
 reg1 = dev.read_reg(CTRL_REG1, 1)[0]
