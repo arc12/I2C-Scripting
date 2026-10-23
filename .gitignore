@@ -6,3 +6,7 @@ __pycache__/
 .venv
 
 .idea/
+
+# output
+output_scd4x/*
+lis2dw12 capture/*
