@@ -53,6 +53,18 @@ class CRC8_x31:
             self.update(byte)
         return self.digest
 
+    def is_valid(self, byte_list):
+        """Assumes last byte is CRC and checks against digest of rest"""
+        return self.complete_digest(byte_list[:-1]) == byte_list[-1]
+
+    def append_crc(self, byte_list):
+        """
+        returns bytes object with crc computed from input parameter and then appended in response
+        :param byte_list:
+        :return:
+        """
+        return byte_list + bytes([self.complete_digest(byte_list)])
+
     def hexdigest(self):
         """Return digest as hexadecimal string."""
         return "0x" + hex(self.digest)[2:].zfill(2)

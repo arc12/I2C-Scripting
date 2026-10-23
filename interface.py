@@ -58,19 +58,20 @@ class I2CDevice:
         """
         self.write(bytes([cmd]))
 
-    def write_cmd16(self, cmd16, bigendian=True):
+    def write_cmd16(self, cmd16, bigendian=True, parameters=None):
         """
         Just send double byte over I2C = slave device command
         :param cmd16: typically set as hex literal
         :param bigendian: if True, the MSB of the command is sent first
+        :param parameters: bytes object with parameter values to send (in byte order) after command.
         :return:
         """
         msb = cmd16 >> 8
         lsb = cmd16 & 0xff
-        if bigendian:
-            self.write(bytes([msb, lsb]))
-        else:
-            self.write(bytes([lsb, msb]))
+        msg = bytes([msb, lsb]) if bigendian else bytes([lsb, msb])
+        if parameters is not None:
+            msg += parameters
+        self.write(msg)
 
     def write_read(self, write_payload, read_bytes=1):
         was_open = self.adapter.serial.is_open
