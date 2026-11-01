@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from plotly.io import write_html, write_image
 from os import path
-from time import sleep
+from time import sleep, time
 from interface import format_hex
 
 # same for SCD40/1/3
@@ -106,6 +106,33 @@ def print_config(dev):
             print(f"{label} (0x{cmd:02X}): {format_hex(response, 3)} (CRC OK={crc_machine.is_valid(response)})")
         else:
             print(f"{label}: NACK")
+
+
+def forced_calibration(dev, assert_ppm, periodic_mode=CMD_START_PERIODIC, warmup_time_s=180):
+    # Perform a normal operation for min 3 mins
+    dev.write_cmd16(periodic_mode)
+    print(f"Run for {warmup_time_s/60} mins before calibration", end='')
+    t0 = time()
+    while time() - t0 < warmup_time_s:
+        print('=', end='')
+        sleep(5)
+    print("|")
+    dev.write_cmd16(CMD_STOP_PERIODIC)
+    sleep(0.5)
+    dev.write_cmd16(CMD_FORCED_CALIBRATION, parameters=crc_machine.append_crc(bytes([assert_ppm // 256, assert_ppm % 256])))
+    sleep(0.4)
+    response = dev.read(3)
+    if crc_machine.is_valid(response):
+        raw_correction = response[0] * 256 + response[1]
+        if raw_correction == 0xFFFF:
+            print("Failed FSC - see datasheet")
+        else:
+            print(f"Correction was {raw_correction - 0x8000}ppm.")
+            return True
+    else:
+        print("CRC Fail!")
+
+    return False
 
 if __name__ == "__main__":
     print(raw_to_physical(bytes([0x01, 0xF4, 0x33, 0x66, 0x67, 0xA2, 0x5E, 0xB9, 0x3C])))

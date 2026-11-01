@@ -77,11 +77,11 @@ while iteration < n_iterations:
 
         if not ready:
             raise Exception("Timed out on CMD_GET_DATA_READY_STATUS")
-        ts = time()
+        ts = round(time(), 0)
 
         dev.write_cmd16(CMD_READ_MEASUREMENT)
         co2, temp, rh = raw_to_physical(dev.read(9))
-        results.append([p, ts, strftime('%H:%M:%S', localtime(time())), co2, round(temp, 3), round(rh, 1)])
+        results.append([p, ts, strftime('%H:%M:%S', localtime(ts)), co2, round(temp, 3), round(rh, 1)])
         # TODO add catch if CRC fail
         print(f"{co2}ppm, {temp:.3f}C, {rh:.1f}% (waited {ts - t0:.2f}s)")
 

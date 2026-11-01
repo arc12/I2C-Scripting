@@ -37,25 +37,27 @@ sleep(0.03)
 print_config(dev)
 
 # run code used to emit CSV file
-run_code = "C3"
+run_code = "D4"
+
+use_low_power = True
 
 # Perform a series of wake + start, read values, stop. Use data-ready polling for new values (available 5s intervals)
 results = list()
-n_per_loop = 120  # number of readings  in inner loop - 5s delay for each
+n_per_loop = 120  # number of readings  in inner loop - 5s (or 30s for LP) delay for each
 n_iterations = 1
 inter_iteration_delay = 0
 iteration = 0
 while iteration < n_iterations:
     print(f"\n{run_code} >> {strftime('%H:%M:%S', localtime(time()))} <<")
-    dev.write_cmd16(CMD_START_PERIODIC)  # observe readings to be "off" for a couple of minutes. ? due to device temp offset being progressively applied (see old ESP8266 notes)
+    dev.write_cmd16(CMD_START_LP if use_low_power else CMD_START_PERIODIC)  # observe readings to be "off" for a couple of minutes. ? due to device temp offset being progressively applied (see old ESP8266 notes)
 
     n = 0
     while n < n_per_loop:
         t0 = time()
-        sleep(4)
+        sleep(29 if use_low_power else 4)
         ready = False
-        while not ready and time() - t0 < 6:
-            sleep(0.1)
+        while not ready and time() - t0 < (31 if use_low_power else 6):
+            sleep(0.5)  # was 0.1 to get more precise delay timings
             dev.write_cmd16(CMD_GET_DATA_READY_STATUS)
             sleep(0.0015)  # 1ms command exec max time
             raw_ready = dev.read(3)
@@ -68,29 +70,27 @@ while iteration < n_iterations:
 
         if not ready:
             raise Exception("Timed out on CMD_GET_DATA_READY_STATUS")
-        ts = time()
+        ts = round(time(), 0)
 
         dev.write_cmd16(CMD_READ_MEASUREMENT)
         co2, temp, rh = raw_to_physical(dev.read(9))
-        results.append([iteration, ts, strftime('%H:%M:%S', localtime(time())), co2, round(temp, 3), round(rh, 1)])
+        results.append([iteration, ts, strftime('%H:%M:%S', localtime(ts)), co2, round(temp, 3), round(rh, 1)])
         # TODO add catch if CRC fail
         print(f"{co2}ppm, {temp:.3f}C, {rh:.1f}% (waited {ts - t0:.2f}s)")
 
         n+=1
 
-    sleep(inter_iteration_delay)
-    # u = input("Repeat? enter 'y'")
-    # if u != "y":
-    #     break
     iteration += 1
     if iteration < n_iterations:
         results.append([None] * 6)  # cause gaps in plot.
+        dev.write_cmd16(CMD_STOP_PERIODIC)
+        print(f"Inter-iteration stop for {inter_iteration_delay}s")
+        sleep(max(0.5, inter_iteration_delay))  # at least 500ms cmd processing period
 
-dev.write_cmd16(CMD_STOP_PERIODIC)
-sleep(0.5)  # 500ms cmd processing period
+dev.write_cmd16(CMD_STOP_PERIODIC)  # last iteration will not have done stop-and-wait
 
 df = pd.DataFrame(results, columns=["iteration", "timestamp", "time", "co2", "temp", "rh"])
-# df.to_csv(path.join("output_scd4x", f"Periodic {run_code}.csv"))
+df.to_csv(path.join("output_scd4x", f"Periodic {run_code}.csv"))
 
 do_plots(df, "Periodic", run_code, save=True, window=6)
 
