@@ -1,5 +1,5 @@
 from interface import Adapter, I2CDevice, format_hex, bytes_to_int16
-from SHT40 import *
+from SHT4x import *
 from time import sleep
 
 adapter = Adapter()
