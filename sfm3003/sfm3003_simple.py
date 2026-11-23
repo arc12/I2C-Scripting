@@ -5,8 +5,6 @@ from time import sleep, time, localtime, strftime
 adapter = Adapter()
 adapter.check()
 
-adapter.set_i2c_speed(I2C_SPEED_99)
-
 dev = I2CDevice(ADDR_7BIT_CE, adapter)
 
 dev.write_cmd16(CMD_READ_IDENTIFIER)
