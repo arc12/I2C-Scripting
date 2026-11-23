@@ -250,6 +250,18 @@ class Adapter:
         gpios = self.read_gpio()
         return bool(gpios & (1<<bit_index))
 
+    def write_gpio(self, full_byte):
+        """
+        Writes the byte provided to the GPIOs, ignoring any previous setting.
+        :param full_byte: of type byte!
+        :return:
+        """
+        already_open = self.serial.is_open
+        if not already_open:
+            self.serial.open()
+        self.serial.write(b'O' + full_byte + b'P')
+
+
 # >>>>>>> misc
 def format_hex(bytes_to_print, bytes_per_sep=1):
     return f"0x{bytes.hex(bytes_to_print, sep=' ', bytes_per_sep=bytes_per_sep)}"
