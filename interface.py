@@ -181,6 +181,7 @@ class Adapter:
 
         :param i2c_speed: see set_i2c_speed(). If None then the hardware default is used, which is documented as 0x13 ie 99kHz
         """
+        self.gpio_outstate = 0  # local state - used in gpio write operations (but see fn docs).
         self.serial = serial.Serial(PORT, BAUD, timeout=READ_TIMEOUT)
         self.serial.close()
 
@@ -237,6 +238,7 @@ class Adapter:
 
     # >>>>>>>> GPIO Operations <<<<<<<<<<
     def read_gpio(self):
+        """Beware - no treatment of mixed input/output"""
         already_open = self.serial.is_open
         if not already_open:
             self.serial.open()
@@ -252,7 +254,8 @@ class Adapter:
 
     def write_gpio(self, full_byte):
         """
-        Writes the byte provided to the GPIOs, ignoring any previous setting.
+        Writes the byte provided to the GPIOs, ignoring any previous setting. Value saved to self.gpio_outstate
+        Beware - no treatment of mixed input/output
         :param full_byte: of type byte!
         :return:
         """
@@ -260,6 +263,20 @@ class Adapter:
         if not already_open:
             self.serial.open()
         self.serial.write(b'O' + full_byte + b'P')
+        self.gpio_outstate = full_byte
+
+    def change_gpio_bit(self, bit, as_one=True):
+        """
+
+        :param bit:
+        :param as_one: if True the bit is set, else it is reset
+        :return:
+        """
+        if as_one:
+            full_byte = self.gpio_outstate | (1 << bit)
+        else:
+            full_byte = self.gpio_outstate & (0xFF^(1 << bit))
+        self.write_gpio(full_byte)
 
 
 # >>>>>>> misc
