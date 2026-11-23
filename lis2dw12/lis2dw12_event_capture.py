@@ -60,7 +60,7 @@ for n_capture in range(n_captures):
 
     print(f"Record interval = {interval_ms:.1f}ms")
 
-    with open(path.join("lis2dw12 capture", f"capture_{n_capture+1}{'_hp_ref' if hp_ref else ''}.csv"), 'w', newline='') as f:
+    with open(path.join("lis2dw12 capture", f"capture_{n_capture + 1}{'_hp_ref' if hp_ref else ''}.csv"), 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(["tims_ms", "x_mg", "y_mg", "z_mg"])
         for i in range(n_records):
