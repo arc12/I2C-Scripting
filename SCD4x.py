@@ -88,8 +88,8 @@ def do_plots(df, run_type, run_code, save=False, window=None):
     fig.update_xaxes(tickvals=df.timestamp, ticktext=df.time)
     fig.show()
     if save:
-        write_html(fig, path.join("output_scd4x", f"{run_type} {run_code}.html"))
-        write_image(fig, path.join("output_scd4x", f"{run_type} {run_code}.png"), format="png")
+        write_html(fig, path.join("scd4x/output_scd4x", f"{run_type} {run_code}.html"))
+        write_image(fig, path.join("scd4x/output_scd4x", f"{run_type} {run_code}.png"), format="png")
 
 def print_config(dev):
     for cmd, label in [  # all responses word + CRC
