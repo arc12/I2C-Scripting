@@ -37,13 +37,13 @@ sleep(0.03)
 print_config(dev)
 
 # run code used to emit CSV file
-run_code = "D4"
+run_code = "XXX"
 
-use_low_power = True
+use_low_power = False
 
 # Perform a series of wake + start, read values, stop. Use data-ready polling for new values (available 5s intervals)
 results = list()
-n_per_loop = 120  # number of readings  in inner loop - 5s (or 30s for LP) delay for each
+n_per_loop = 12  # number of readings  in inner loop - 5s (or 30s for LP) delay for each
 n_iterations = 1
 inter_iteration_delay = 0
 iteration = 0
@@ -90,7 +90,7 @@ while iteration < n_iterations:
 dev.write_cmd16(CMD_STOP_PERIODIC)  # last iteration will not have done stop-and-wait
 
 df = pd.DataFrame(results, columns=["iteration", "timestamp", "time", "co2", "temp", "rh"])
-df.to_csv(path.join("output_scd4x", f"Periodic {run_code}.csv"))
+# df.to_csv(path.join("output_scd4x", f"Periodic {run_code}.csv"))
 
-do_plots(df, "Periodic", run_code, save=True, window=6)
+do_plots(df, "Periodic", run_code, save=False, window=6)
 
